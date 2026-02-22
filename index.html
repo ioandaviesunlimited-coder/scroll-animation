@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Scroll Animation</title>
+<style>
+  body {
+    height: 5000px;
+    margin: 0;
+    overflow-x: hidden;
+  }
+
+  canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="sequence"></canvas>
+
+<script>
+const frameCount = 85; // CHANGE to your total frames
+
+const currentFrame = index => (
+  `images/frame_${index.toString().padStart(5, '0')}.png`
+);
+
+const canvas = document.getElementById("sequence");
+const context = canvas.getContext("2d");
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+const images = [];
+
+for (let i = 0; i < frameCount; i++) {
+  const img = new Image();
+  img.src = currentFrame(i);
+  images.push(img);
+}
+
+function drawImageCover(img) {
+  const canvasRatio = canvas.width / canvas.height;
+  const imgRatio = img.width / img.height;
+
+  let drawWidth, drawHeight;
+
+  if (canvasRatio > imgRatio) {
+    drawWidth = canvas.width;
+    drawHeight = canvas.width / imgRatio;
+  } else {
+    drawHeight = canvas.height;
+    drawWidth = canvas.height * imgRatio;
+  }
+
+  const x = (canvas.width - drawWidth) / 2;
+  const y = (canvas.height - drawHeight) / 2;
+
+  context.drawImage(img, x, y, drawWidth, drawHeight);
+}
+
+function render() {
+  const scrollTop = document.documentElement.scrollTop;
+  const maxScrollTop =
+    document.documentElement.scrollHeight - window.innerHeight;
+
+  const scrollFraction = scrollTop / maxScrollTop;
+  const frameIndex = Math.min(
+    frameCount - 1,
+    Math.floor(scrollFraction * frameCount)
+  );
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  drawImageCover(images[frameIndex]);
+}
+
+images[0].onload = render;
+
+window.addEventListener("scroll", () => {
+  requestAnimationFrame(render);
+});
+</script>
+
+
