@@ -4,15 +4,17 @@
 <meta charset="UTF-8">
 <title>Scroll PNG Sequence Over Video</title>
 
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 500vh; /* scroll length */
-  overflow-x: hidden;
-  background: transparent; /* <- CHANGE THIS */
-}
+<style>
+  /* Make body transparent so video shows through */
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 500vh; /* Controls scroll length, adjust as needed */
+    overflow-x: hidden;
+    background: transparent;
+  }
 
-  /* Background video fills screen */
+  /* Background video styling */
   #background-video {
     position: fixed;
     top: 0;
@@ -29,7 +31,7 @@ html, body {
     top: 0;
     left: 0;
     z-index: 1;
-    pointer-events: none; /* allows clicking through canvas if needed */
+    pointer-events: none; /* allows clicking through */
   }
 </style>
 </head>
@@ -37,7 +39,7 @@ html, body {
 <body>
 
 <!-- Background video -->
-<video autoplay muted loop id="background-video">
+<video autoplay muted loop playsinline preload="auto" id="background-video">
   <source src="yourvideo.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
@@ -49,12 +51,17 @@ html, body {
 /* ===========================
    SETTINGS
 =========================== */
-const frameCount = 180; // 🔥 CHANGE to your total number of PNG frames
+
+// Total number of PNG frames in your sequence
+const frameCount = 180; // 🔥 Change to your actual frame count
+
+// Path to each frame; assumes 5-digit naming like frame_00000.png
 const imagePath = index => `images/frame_${index.toString().padStart(5,'0')}.png`;
 
 /* ===========================
    CANVAS SETUP
 =========================== */
+
 const canvas = document.getElementById("sequence");
 const context = canvas.getContext("2d");
 
@@ -69,6 +76,7 @@ window.addEventListener("resize", resizeCanvas);
 /* ===========================
    PRELOAD IMAGES
 =========================== */
+
 const images = [];
 for (let i = 0; i < frameCount; i++) {
   const img = new Image();
@@ -79,6 +87,7 @@ for (let i = 0; i < frameCount; i++) {
 /* ===========================
    DRAW IMAGE (COVER MODE)
 =========================== */
+
 function drawImageCover(img) {
   const canvasRatio = canvas.width / canvas.height;
   const imgRatio = img.width / img.height;
@@ -103,6 +112,7 @@ function drawImageCover(img) {
 /* ===========================
    SCROLL ANIMATION
 =========================== */
+
 function render() {
   const scrollTop = document.documentElement.scrollTop;
   const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -112,7 +122,7 @@ function render() {
   drawImageCover(images[frameIndex]);
 }
 
-// Draw first frame when loaded
+// Draw first frame immediately
 images[0].onload = render;
 
 // Update frames on scroll
