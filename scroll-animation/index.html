@@ -22,9 +22,8 @@
 <canvas id="sequence"></canvas>
 
 <script>
-const frameCount = 120; // 🔥 CHANGE THIS to your total number of frames
+const frameCount = 85; // CHANGE to your total frames
 
-// 5-digit padding for frame_00000.png
 const currentFrame = index => (
   `images/frame_${index.toString().padStart(5, '0')}.png`
 );
@@ -32,16 +31,40 @@ const currentFrame = index => (
 const canvas = document.getElementById("sequence");
 const context = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
 const images = [];
 
-// Start from 0 because your sequence starts at frame_00000.png
 for (let i = 0; i < frameCount; i++) {
   const img = new Image();
   img.src = currentFrame(i);
   images.push(img);
+}
+
+function drawImageCover(img) {
+  const canvasRatio = canvas.width / canvas.height;
+  const imgRatio = img.width / img.height;
+
+  let drawWidth, drawHeight;
+
+  if (canvasRatio > imgRatio) {
+    drawWidth = canvas.width;
+    drawHeight = canvas.width / imgRatio;
+  } else {
+    drawHeight = canvas.height;
+    drawWidth = canvas.height * imgRatio;
+  }
+
+  const x = (canvas.width - drawWidth) / 2;
+  const y = (canvas.height - drawHeight) / 2;
+
+  context.drawImage(img, x, y, drawWidth, drawHeight);
 }
 
 function render() {
@@ -56,16 +79,12 @@ function render() {
   );
 
   context.clearRect(0, 0, canvas.width, canvas.height);
-  context.drawImage(images[frameIndex], 0, 0);
+  drawImageCover(images[frameIndex]);
 }
 
-// Draw first frame immediately
 images[0].onload = render;
 
 window.addEventListener("scroll", () => {
   requestAnimationFrame(render);
 });
 </script>
-
-</body>
-</html>
