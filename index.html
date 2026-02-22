@@ -5,13 +5,13 @@
 <title>Scroll PNG Sequence Over Video</title>
 
 <style>
-  /* Make body transparent so video shows through */
+  /* Hide scrollbars and make body transparent */
   html, body {
     margin: 0;
     padding: 0;
-    height: 500vh; /* Controls scroll length, adjust as needed */
-    overflow-x: hidden;
-    background: transparent;
+    height: 500vh; /* scroll length for animation */
+    overflow: hidden; /* hides iframe scrollbar */
+    background: black; /* fallback for non-transparent areas */
   }
 
   /* Background video styling */
@@ -31,7 +31,7 @@
     top: 0;
     left: 0;
     z-index: 1;
-    pointer-events: none; /* allows clicking through */
+    pointer-events: none; /* allows clicks through */
   }
 </style>
 </head>
@@ -51,17 +51,12 @@
 /* ===========================
    SETTINGS
 =========================== */
-
-// Total number of PNG frames in your sequence
-const frameCount = 100; // 🔥 Change to your actual frame count
-
-// Path to each frame; assumes 5-digit naming like frame_00000.png
+const frameCount = 99; // 🔥 Change to your total number of PNG frames
 const imagePath = index => `images/frame_${index.toString().padStart(5,'0')}.png`;
 
 /* ===========================
    CANVAS SETUP
 =========================== */
-
 const canvas = document.getElementById("sequence");
 const context = canvas.getContext("2d");
 
@@ -69,14 +64,12 @@ function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 }
-
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
 /* ===========================
    PRELOAD IMAGES
 =========================== */
-
 const images = [];
 for (let i = 0; i < frameCount; i++) {
   const img = new Image();
@@ -87,7 +80,6 @@ for (let i = 0; i < frameCount; i++) {
 /* ===========================
    DRAW IMAGE (COVER MODE)
 =========================== */
-
 function drawImageCover(img) {
   const canvasRatio = canvas.width / canvas.height;
   const imgRatio = img.width / img.height;
@@ -110,25 +102,48 @@ function drawImageCover(img) {
 }
 
 /* ===========================
-   SCROLL ANIMATION
+   SIMULATED SCROLL FOR IFRAME
 =========================== */
+let fakeScroll = 0;
 
-function render() {
-  const scrollTop = document.documentElement.scrollTop;
-  const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-  const scrollFraction = scrollTop / maxScroll;
+function handleWheel(e) {
+  e.preventDefault();
+  const delta = e.deltaY;
+  fakeScroll += delta;
+  const maxScroll = window.innerHeight * 5; // matches your 500vh
+  fakeScroll = Math.max(0, Math.min(fakeScroll, maxScroll));
 
+  const scrollFraction = fakeScroll / maxScroll;
   const frameIndex = Math.min(frameCount - 1, Math.floor(scrollFraction * frameCount));
   drawImageCover(images[frameIndex]);
 }
 
 // Draw first frame immediately
-images[0].onload = render;
+images[0].onload = () => drawImageCover(images[0]);
 
-// Update frames on scroll
-window.addEventListener("scroll", () => {
-  requestAnimationFrame(render);
-});
+// Update frames on scroll wheel
+window.addEventListener('wheel', handleWheel, { passive: false });
+
+/* Optional: support touch for mobile */
+let touchStartY = null;
+window.addEventListener('touchstart', e => {
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+window.addEventListener('touchmove', e => {
+  if (touchStartY === null) return;
+  const delta = touchStartY - e.touches[0].clientY;
+  fakeScroll += delta;
+  const maxScroll = window.innerHeight * 5;
+  fakeScroll = Math.max(0, Math.min(fakeScroll, maxScroll));
+
+  const scrollFraction = fakeScroll / maxScroll;
+  const frameIndex = Math.min(frameCount - 1, Math.floor(scrollFraction * frameCount));
+  drawImageCover(images[frameIndex]);
+
+  touchStartY = e.touches[0].clientY;
+  e.preventDefault();
+}, { passive: false });
 </script>
 
 </body>
