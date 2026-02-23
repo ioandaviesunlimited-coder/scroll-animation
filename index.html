@@ -161,9 +161,18 @@ window.addEventListener("touchmove", e => {
 }, { passive: false });
 
 /* ===========================
-   INITIAL FRAME
+   INITIAL FRAME RENDER
 =========================== */
-images[0].onload = () => drawImageCover(images[0]);
+
+// Draw first frame as soon as it loads
+images[0].addEventListener("load", () => {
+  drawImageCover(images[0]);
+});
+
+// Force initial frame render when page fully loads
+window.addEventListener("load", () => {
+  updateFrame();
+});
 
 </script>
 
