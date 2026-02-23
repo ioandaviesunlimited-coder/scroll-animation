@@ -50,7 +50,7 @@ const isMobile = window.innerWidth <= 768;
 /* ===========================
    SETTINGS
 =========================== */
-const frameCount = isMobile ? 60 : 180;
+const frameCount = 83; // 🔥 83 frames for BOTH desktop and mobile
 const scrollMultiplier = isMobile ? 3 : 5;
 
 const imagePath = index => {
@@ -118,7 +118,7 @@ function drawImageCover(img) {
    SCROLL LOGIC
 =========================== */
 let fakeScroll = 0;
-const maxScroll = window.innerHeight * scrollMultiplier;
+let maxScroll = window.innerHeight * scrollMultiplier;
 
 function updateFrame() {
   const scrollFraction = fakeScroll / maxScroll;
