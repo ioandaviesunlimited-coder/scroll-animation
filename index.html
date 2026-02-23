@@ -2,19 +2,17 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scroll PNG Sequence Over Video</title>
 
 <style>
-  /* Hide scrollbars and make body transparent */
   html, body {
     margin: 0;
     padding: 0;
-    height: 500vh; /* scroll length for animation */
-    overflow: hidden; /* hides iframe scrollbar */
-    background: black; /* fallback for non-transparent areas */
+    overflow: hidden;
+    background: black;
   }
 
-  /* Background video styling */
   #background-video {
     position: fixed;
     top: 0;
@@ -25,34 +23,49 @@
     z-index: 0;
   }
 
-  /* Canvas sits on top of video */
   canvas#sequence {
     position: fixed;
     top: 0;
     left: 0;
     z-index: 1;
-    pointer-events: none; /* allows clicks through */
+    pointer-events: none;
   }
 </style>
 </head>
 
 <body>
 
-<!-- Background video -->
 <video autoplay muted loop playsinline preload="auto" id="background-video">
   <source src="yourvideo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
 </video>
 
-<!-- PNG sequence canvas -->
 <canvas id="sequence"></canvas>
 
 <script>
 /* ===========================
+   DEVICE DETECTION
+=========================== */
+const isMobile = window.innerWidth <= 768;
+
+/* ===========================
    SETTINGS
 =========================== */
-const frameCount = 180; // 🔥 Change to your total number of PNG frames
-const imagePath = index => `images/frame_${index.toString().padStart(5,'0')}.png`;
+const frameCount = isMobile ? 60 : 180;
+const scrollMultiplier = isMobile ? 3 : 5;
+
+const imagePath = index => {
+  const folder = isMobile ? "images/mobile" : "images/desktop";
+  return `${folder}/frame_${index.toString().padStart(5,'0')}.png`;
+};
+
+/* Set scroll height */
+document.body.style.height = `${scrollMultiplier * 100}vh`;
+
+/* Remove video on mobile for performance */
+if (isMobile) {
+  const video = document.getElementById("background-video");
+  video.parentNode.removeChild(video);
+}
 
 /* ===========================
    CANVAS SETUP
@@ -102,48 +115,56 @@ function drawImageCover(img) {
 }
 
 /* ===========================
-   SIMULATED SCROLL FOR IFRAME
+   SCROLL LOGIC
 =========================== */
 let fakeScroll = 0;
+const maxScroll = window.innerHeight * scrollMultiplier;
 
-function handleWheel(e) {
-  e.preventDefault();
-  const delta = e.deltaY;
-  fakeScroll += delta;
-  const maxScroll = window.innerHeight * 5; // matches your 500vh
-  fakeScroll = Math.max(0, Math.min(fakeScroll, maxScroll));
-
+function updateFrame() {
   const scrollFraction = fakeScroll / maxScroll;
-  const frameIndex = Math.min(frameCount - 1, Math.floor(scrollFraction * frameCount));
+  const frameIndex = Math.min(
+    frameCount - 1,
+    Math.floor(scrollFraction * frameCount)
+  );
   drawImageCover(images[frameIndex]);
 }
 
-// Draw first frame immediately
-images[0].onload = () => drawImageCover(images[0]);
+function handleWheel(e) {
+  e.preventDefault();
+  fakeScroll += e.deltaY;
+  fakeScroll = Math.max(0, Math.min(fakeScroll, maxScroll));
+  updateFrame();
+}
 
-// Update frames on scroll wheel
-window.addEventListener('wheel', handleWheel, { passive: false });
+window.addEventListener("wheel", handleWheel, { passive: false });
 
-/* Optional: support touch for mobile */
+/* ===========================
+   TOUCH SUPPORT (MOBILE)
+=========================== */
 let touchStartY = null;
-window.addEventListener('touchstart', e => {
+
+window.addEventListener("touchstart", e => {
   touchStartY = e.touches[0].clientY;
 }, { passive: true });
 
-window.addEventListener('touchmove', e => {
+window.addEventListener("touchmove", e => {
   if (touchStartY === null) return;
+
   const delta = touchStartY - e.touches[0].clientY;
   fakeScroll += delta;
-  const maxScroll = window.innerHeight * 5;
   fakeScroll = Math.max(0, Math.min(fakeScroll, maxScroll));
 
-  const scrollFraction = fakeScroll / maxScroll;
-  const frameIndex = Math.min(frameCount - 1, Math.floor(scrollFraction * frameCount));
-  drawImageCover(images[frameIndex]);
+  updateFrame();
 
   touchStartY = e.touches[0].clientY;
   e.preventDefault();
 }, { passive: false });
+
+/* ===========================
+   INITIAL FRAME
+=========================== */
+images[0].onload = () => drawImageCover(images[0]);
+
 </script>
 
 </body>
